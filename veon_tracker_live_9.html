@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>VEON US Strategy Tracker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans,sans-serif);font-size:13px;color:var(--color-text-primary);background:transparent;padding-bottom:2rem}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+
+/* ── Header ── */
+.hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:1.25rem 0 1rem;flex-wrap:wrap}
+.hdr-l h1{font-size:18px;font-weight:600;letter-spacing:-0.3px;color:var(--color-text-primary)}
+.hdr-l p{font-size:11px;color:var(--color-text-secondary);margin-top:4px;line-height:1.5}
+.ctl{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.ctl select,.ctl input[type=text]{font-size:11.5px;padding:5px 9px;border:1px solid var(--color-border-secondary);border-radius:8px;background:var(--color-background-primary);color:var(--color-text-primary);height:30px;outline:none;transition:border-color .15s}
+.ctl select:focus,.ctl input[type=text]:focus{border-color:var(--color-text-secondary)}
+.ctl input[type=text]{width:140px}
+.role-box{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--color-background-secondary);border-radius:8px;border:1px solid var(--color-border-tertiary)}
+.role-box label{font-size:10px;color:var(--color-text-secondary);white-space:nowrap}
+.role-box select{font-size:11px;border:none;background:transparent;color:var(--color-text-primary);cursor:pointer;padding:0;height:auto;outline:none}
+
+/* ── Live banner ── */
+.banner{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 14px;background:#EAF3DE;border-radius:10px;margin-bottom:14px;font-size:11px;color:#27500A;flex-wrap:wrap;border:1px solid #C0DDB5}
+
+/* ── Metric cards ── */
+.mets{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px;margin-bottom:16px}
+.mc{background:var(--color-background-primary);border:1px solid var(--color-border-tertiary);border-radius:12px;padding:12px 14px;transition:box-shadow .15s}
+.mc:hover{box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.mc .ml{font-size:10px;font-weight:500;color:var(--color-text-secondary);margin-bottom:4px;text-transform:uppercase;letter-spacing:.03em}
+.mc .mv{font-size:22px;font-weight:600;line-height:1;color:var(--color-text-primary)}
+.mc .ms{font-size:10px;color:var(--color-text-secondary);margin-top:3px}
+
+/* ── Tabs ── */
+.tab-wrap{display:flex;align-items:center;gap:4px;margin-bottom:12px;background:var(--color-background-secondary);padding:4px;border-radius:10px;overflow-x:auto;width:fit-content}
+.tab{font-size:11.5px;padding:5px 14px;border:none;background:transparent;color:var(--color-text-secondary);cursor:pointer;border-radius:7px;white-space:nowrap;font-weight:500;transition:background .15s,color .15s}
+.tab:hover{background:var(--color-background-primary);color:var(--color-text-primary)}
+.tab.on{background:var(--color-background-primary);color:var(--color-text-primary);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+
+/* ── Table card ── */
+.tbl-card{background:var(--color-background-primary);border:1px solid var(--color-border-tertiary);border-radius:12px;overflow:clip;margin-bottom:4px}
+.tbl-scrl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:11.5px;min-width:880px}
+th{font-size:12px;font-weight:700;color:var(--color-text-primary);text-align:left;padding:11px 11px;border-bottom:1px solid var(--color-border-tertiary);background:var(--color-background-secondary);white-space:nowrap;letter-spacing:.01em;text-transform:uppercase;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 var(--color-border-tertiary)}
+td{padding:7px 11px;border-bottom:1px solid var(--color-border-tertiary);color:var(--color-text-primary);vertical-align:top;line-height:1.45}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--color-background-secondary)}
+.grp-hd td{background:var(--color-background-secondary);padding:10px 11px;border-bottom:1px solid var(--color-border-tertiary);border-top:1px solid var(--color-border-tertiary)}
+
+/* ── Pills & badges ── */
+.pill{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap;letter-spacing:.01em}
+.chg-badge{font-size:9px;font-weight:600;padding:2px 6px;border-radius:6px;background:#EAF3DE;color:#27500A;white-space:nowrap;margin-left:4px;letter-spacing:.01em}
+.new-badge{font-size:9px;font-weight:600;padding:2px 6px;border-radius:6px;background:#FAEEDA;color:#633806;white-space:nowrap;margin-left:4px}
+.act-badge{font-size:9px;font-weight:600;padding:2px 6px;border-radius:6px;background:#FCEBEB;color:#791F1F;white-space:nowrap;margin-left:4px}
+
+/* ── Status select ── */
+.stat-sel{font-size:10px;font-weight:600;padding:3px 6px;border:none;border-radius:7px;background:var(--color-background-secondary);color:var(--color-text-primary);cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;width:100%;text-align:center}
+.stat-sel:disabled{cursor:default;opacity:.8}
+
+/* ── Dependency chain ── */
+.dep-chain{display:flex;flex-direction:column;gap:3px}
+.dep-item{display:flex;align-items:flex-start;gap:4px;font-size:10px}
+.dep-label{font-size:9.5px;font-weight:600;padding:2px 6px;border-radius:6px;line-height:1.4}
+.dep-none{font-size:10px;color:var(--color-text-tertiary);font-style:italic}
+
+/* ── Notes & flags ── */
+.note{font-size:10px;color:var(--color-text-secondary);margin-top:3px;line-height:1.45}
+.row-upd td{background:rgba(39,80,10,.05) !important}
+.row-new td{background:rgba(250,206,122,.12) !important}
+.flag-a{border-left:3px solid #E24B4A}
+.flag-m{border-left:3px solid #1D9E75}
+.flag-am{border-left:3px solid #7F77DD}
+
+/* ── Progress bar ── */
+.pb-wrap{height:5px;background:var(--color-background-secondary);border-radius:99px;overflow:hidden;min-width:54px;margin-top:4px}
+.pb{height:100%;border-radius:99px;transition:width .3s}
+
+/* ── Risk / change cards ── */
+.risk-card{display:flex;gap:12px;padding:12px 14px;border:1px solid var(--color-border-tertiary);border-radius:12px;margin-bottom:8px;align-items:flex-start;background:var(--color-background-primary);transition:box-shadow .15s}
+.risk-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.risk-lv{font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0;margin-top:1px;letter-spacing:.01em}
+
+/* ── Add task row & form ── */
+.add-row{display:flex;justify-content:flex-end;margin-bottom:10px}
+.add-btn{display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;padding:6px 14px;border:1px solid var(--color-border-secondary);border-radius:8px;background:var(--color-background-primary);color:var(--color-text-primary);cursor:pointer;transition:background .15s,border-color .15s}
+.add-btn:hover{background:var(--color-background-secondary);border-color:var(--color-text-secondary)}
+.add-form{display:none;background:var(--color-background-primary);border:1px solid var(--color-border-tertiary);border-radius:12px;padding:16px 18px;margin-bottom:12px}
+.add-form.open{display:block}
+.add-form h3{font-size:13px;font-weight:600;margin-bottom:12px;color:var(--color-text-primary)}
+.add-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}
+.add-grid.full{grid-template-columns:1fr}
+.add-form label{display:block;font-size:9.5px;font-weight:600;color:var(--color-text-secondary);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em}
+.add-form input[type=text],.add-form select,.add-form textarea{width:100%;font-size:11.5px;padding:6px 9px;border:1px solid var(--color-border-secondary);border-radius:8px;background:var(--color-background-secondary);color:var(--color-text-primary);outline:none;transition:border-color .15s;font-family:inherit}
+.add-form input[type=text]:focus,.add-form select:focus,.add-form textarea:focus{border-color:var(--color-text-secondary);background:var(--color-background-primary)}
+.add-form textarea{resize:vertical;min-height:40px}
+.add-form .chk-row{display:flex;gap:16px;align-items:center;font-size:11px;color:var(--color-text-secondary)}
+.add-form .chk-row label{display:flex;align-items:center;gap:5px;text-transform:none;font-size:11px;font-weight:400;margin-bottom:0;letter-spacing:0}
+.add-form .chk-row input[type=checkbox]{width:auto;accent-color:#185FA5}
+.add-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
+.add-actions button{font-size:11.5px;font-weight:500;padding:7px 16px;border-radius:8px;cursor:pointer;transition:opacity .15s}
+.btn-cancel{border:1px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-primary)}
+.btn-cancel:hover{background:var(--color-background-primary)}
+.btn-save{border:none;background:#185FA5;color:#fff;font-weight:600}
+.btn-save:hover{opacity:.88}
+.due-urgent{font-size:10px;font-weight:700;color:#A32D2D;background:#FCEBEB;border:1.5px solid #E24B4A;border-radius:6px;padding:2px 7px;white-space:nowrap;letter-spacing:.02em}
+</style>
+</head>
+<body>
+
+<h2 class="sr-only">VEON US Strategy 2026 Workflow Tracker — live shared tracker with dependency mapping, status, and risk views.</h2>
+
+<div class="hdr">
+  <div class="hdr-l">
+    <h1>VEON US strategy — 2026 workflow tracker</h1>
+    <p>Baseline: Jun 23, 2026 update (Ridgeline weekly memo + TIIF Flash Report) · <span id="syncNote" style="color:#27500A;font-weight:500">live shared tracker</span></p>
+  </div>
+  <div class="ctl">
+    <input type="text" id="srch" placeholder="Search..." oninput="render()">
+    <select id="wsFlt" onchange="render()">
+      <option value="">All workstreams</option>
+      <option>Access & Protection</option>
+      <option>Ukraine</option>
+      <option>Pakistan</option>
+      <option>Central Asia</option>
+      <option>Bangladesh</option>
+      <option>New Markets</option>
+      <option>Digital Finance</option>
+      <option>Emerging Tech</option>
+      <option>NYC Office</option>
+    </select>
+    <select id="stFlt" onchange="render()">
+      <option value="">All statuses</option>
+      <option>Not Started</option>
+      <option>In Progress</option>
+      <option>Blocked</option>
+      <option>Done</option>
+      <option>Urgent</option>
+    </select>
+    <select id="chgFlt" onchange="render()">
+      <option value="">All tasks</option>
+      <option value="updated">Updated this week</option>
+      <option value="new">New this week</option>
+      <option value="action">Action required</option>
+    </select>
+    <div class="role-box">
+      <label for="roleSel">Viewing as</label>
+      <select id="roleSel" onchange="render()">
+        <option value="team">Team (edit)</option>
+        <option value="client">Client (view only)</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="banner">
+  <span><i class="ti ti-circle-check" style="font-size:15px" aria-hidden="true"></i> Status edits sync live for everyone viewing this tracker — <strong>green rows</strong> updated this cycle · <strong>amber rows</strong> new · red badges = immediate action required</span>
+  <span id="lastEdit" style="color:#27500A"></span>
+</div>
+
+<div class="mets" id="mets"></div>
+
+<div class="tab-wrap">
+  <button class="tab on" onclick="sw('tracker',this)">Tracker</button>
+  <button class="tab" onclick="sw('thisweek',this)">This week's changes</button>
+  <button class="tab" onclick="sw('actions',this)">Action items</button>
+  <button class="tab" onclick="sw('risks',this)">Risks</button>
+</div>
+
+<div id="pn-tracker">
+<div class="add-row" id="addRow">
+  <button class="add-btn" onclick="toggleAddForm()"><i class="ti ti-plus" style="font-size:13px;vertical-align:-2px;margin-right:4px" aria-hidden="true"></i>Add task</button>
+</div>
+<div class="add-form" id="addForm">
+  <h3>New task or deliverable</h3>
+  <div class="add-grid">
+    <div>
+      <label for="af-ws">Workstream</label>
+      <select id="af-ws">
+        <option>Access & Protection</option>
+        <option>Ukraine</option>
+        <option>Pakistan</option>
+        <option>Central Asia</option>
+        <option>Bangladesh</option>
+        <option>New Markets</option>
+        <option>Digital Finance</option>
+        <option>Emerging Tech</option>
+        <option>NYC Office</option>
+      </select>
+    </div>
+    <div>
+      <label for="af-phase">Phase</label>
+      <select id="af-phase">
+        <option>Foundation</option>
+        <option>Execution</option>
+        <option>Conversion</option>
+      </select>
+    </div>
+    <div>
+      <label for="af-owner">Owner</label>
+      <input type="text" id="af-owner" placeholder="e.g. Josh / CA">
+    </div>
+  </div>
+  <div class="add-grid full">
+    <div>
+      <label for="af-task">Task / deliverable</label>
+      <input type="text" id="af-task" placeholder="Describe the task">
+    </div>
+  </div>
+  <div class="add-grid">
+    <div>
+      <label for="af-due">Due</label>
+      <input type="text" id="af-due" placeholder="e.g. Q3, Jul 15, ASAP">
+    </div>
+    <div>
+      <label for="af-dur">Duration</label>
+      <input type="text" id="af-dur" placeholder="e.g. 2 wks">
+    </div>
+    <div>
+      <label for="af-status">Status</label>
+      <select id="af-status">
+        <option>Not Started</option>
+        <option>In Progress</option>
+        <option>Blocked</option>
+        <option>Done</option>
+        <option>Urgent</option>
+      </select>
+    </div>
+  </div>
+  <div class="add-grid full">
+    <div>
+      <label for="af-pre">Prerequisites (task IDs, comma-separated — optional)</label>
+      <input type="text" id="af-pre" placeholder="e.g. A1, CA3">
+      <div class="multi-help">IDs shown in the leftmost column of the tracker table below.</div>
+    </div>
+  </div>
+  <div class="add-grid full">
+    <div>
+      <label for="af-note">Note (optional)</label>
+      <textarea id="af-note" placeholder="Context, source, or rationale"></textarea>
+    </div>
+  </div>
+  <div class="add-grid">
+    <div class="chk-row">
+      <label><input type="checkbox" id="af-a"> Augie priority</label>
+      <label><input type="checkbox" id="af-m"> Marine priority</label>
+      <label><input type="checkbox" id="af-act"> Action required</label>
+    </div>
+  </div>
+  <div class="add-actions">
+    <button class="btn-cancel" onclick="toggleAddForm()">Cancel</button>
+    <button class="btn-save" onclick="addTask()">Add task</button>
+  </div>
+</div>
+<div class="tbl-card"><div class="tbl-scrl"><table>
+<thead><tr>
+  <th style="width:115px">Workstream</th>
+  <th style="width:190px">Task / subtask</th>
+  <th style="width:68px">Phase</th>
+  <th style="width:138px">Prerequisites</th>
+  <th style="width:128px">Unlocks</th>
+  <th style="width:90px">Owner</th>
+  <th style="width:52px">Duration</th>
+  <th style="width:55px">Due</th>
+  <th style="width:95px">Status</th>
+</tr></thead>
+<tbody id="tbody"></tbody>
+</table></div></div></div>
+
+<div id="pn-thisweek" style="display:none;padding:0.5rem 0"></div>
+<div id="pn-actions" style="display:none;padding:0.5rem 0"></div>
+<div id="pn-risks" style="display:none;padding:0.5rem 0"></div>
+
+<script>
+const STORAGE_KEY = 'veon-tracker-statuses-v1';
+
+const WS_C={"Access & Protection":["#E6F1FB","#0C447C"],"Ukraine":["#EAF3DE","#27500A"],"Pakistan":["#FAEEDA","#633806"],"Central Asia":["#EEEDFE","#3C3489"],"Bangladesh":["#E1F5EE","#085041"],"New Markets":["#FAECE7","#712B13"],"Digital Finance":["#FBEAF0","#72243E"],"Emerging Tech":["#F1EFE8","#444441"],"NYC Office":["#FCEBEB","#791F1F"]};
+const WS_EMOJI={
+  "Access & Protection":"🛡️",
+  "Ukraine":`<img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f1fa-1f1e6.png" style="width:20px;height:20px;object-fit:contain;display:inline-block;vertical-align:middle">`,
+  "Pakistan":`<img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f1f5-1f1f0.png" style="width:20px;height:20px;object-fit:contain;display:inline-block;vertical-align:middle">`,
+  "Central Asia":"🌐",
+  "Bangladesh":`<img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f1e7-1f1e9.png" style="width:20px;height:20px;object-fit:contain;display:inline-block;vertical-align:middle">`,
+  "New Markets":"🗺️",
+  "Digital Finance":"💳",
+  "Emerging Tech":"🛰️",
+  "NYC Office":"🗽"
+};
+const PH_C={"Foundation":["#E6F1FB","#0C447C"],"Execution":["#EEEDFE","#3C3489"],"Conversion":["#EAF3DE","#27500A"]};
+const ST_C={"Not Started":["#F1EFE8","#5F5E5A"],"In Progress":["#E6F1FB","#185FA5"],"Blocked":["#FCEBEB","#A32D2D"],"Done":["#EAF3DE","#3B6D11"],"Urgent":["#FAECE7","#993C1D"]};
+
+const T=[
+  {id:"A1",ws:"Access & Protection",task:"McKim/JVR intelligence due diligence",phase:"Foundation",pre:[],unlocks:["A2","CA1","CA3","NM1"],owner:"Ridgeline",dur:"2 wks",due:"Jun 30",status:"In Progress",prog:60,a:false,m:false,upd:false,isNew:false,act:false,note:"Due Jun 30 — gates CA1, CA3, NM1"},
+  {id:"A2",ws:"Access & Protection",task:"Dan Katz introductory meeting",phase:"Foundation",pre:["A1"],unlocks:["NM1","NM2","NYC3"],owner:"Josh / CA",dur:"1 wk",due:"ASAP",status:"Not Started",prog:0,a:false,m:true,upd:false,isNew:false,act:true,note:"Marine: overdue. Dan Katz in Syria orbit. Unblocks NM1, NM2, NYC3"},
+  {id:"A3",ws:"Access & Protection",task:"Quarterly USG cadence (Augie + top-5 principals)",phase:"Foundation",pre:[],unlocks:["A4","UKR1","CA2","NM3"],owner:"CA / Augie",dur:"Ongoing",due:"Q3",status:"In Progress",prog:55,a:true,m:false,upd:true,isNew:false,act:false,note:"Updated (Jun 19): Ridgeline–Chairman Fabela strategy call held. H2 2026 + 2027 positioning mapped"},
+  {id:"A4",ws:"Access & Protection",task:"Deepen White House & NSC national security relationships",phase:"Execution",pre:["A3"],unlocks:["A5"],owner:"Ridgeline / Continental",dur:"Ongoing",due:"Q3–Q4",status:"In Progress",prog:30,a:true,m:false,upd:false,isNew:false,act:false,note:"Augie not satisfied — wants sustained WH/Congressional NS engagement"},
+  {id:"A5",ws:"Access & Protection",task:"Position Augie in Rubio & Trump circles",phase:"Execution",pre:["A4"],unlocks:["NM3","NM5"],owner:"CA / Ridgeline",dur:"Ongoing",due:"Q3",status:"Not Started",prog:0,a:false,m:true,upd:false,isNew:false,act:false,note:""},
+  {id:"A6",ws:"Access & Protection",task:"US Ambassador engagement program (all 5 markets)",phase:"Execution",pre:["A3"],unlocks:[],owner:"CA",dur:"1 qtr",due:"Q3",status:"Not Started",prog:0,a:false,m:false,upd:false,isNew:false,act:false,note:"No Ambassador meetings documented in any market yet"},
+  {id:"ADV1",ws:"Access & Protection",task:"Atlantic Council Trade Not Aid — deconflict with Haik; confirm July participation",phase:"Execution",pre:[],unlocks:[],owner:"Josh / CA / Haik",dur:"1 wk",due:"IMMEDIATE",status:"Not Started",prog:0,a:false,m:false,upd:false,isNew:true,act:true,note:"NEW (Jun 19): Josh joined virtually. EXIM Bank CoS participant. Must deconflict with Haik before confirming. July event"},
+
+  {id:"UKR1",ws:"Ukraine",task:"DFC meeting: UTC energy-resilience thesis",phase:"Foundation",pre:["A3"],unlocks:["UKR2","UKR3"],owner:"CA / Josh",dur:"1 wk",due:"Q3",status:"In Progress",prog:45,a:false,m:false,upd:false,isNew:false,act:false,note:""},
+  {id:"UKR2",ws:"Ukraine",task:"Meeting with Deputy Sec. Chris Landau & Ben Black (amplify URIF)",phase:"Foundation",pre:["UKR1"],unlocks:["UKR3"],owner:"Augie / CA",dur:"2 wks",due:"Q3",status:"Not Started",prog:0,a:true,m:false,upd:false,isNew:false,act:false,note:"Cannot file URIF application without senior DFC + State alignment. Augie explicitly requested"},
+  {id:"UKR3",ws:"Ukraine",task:"File URIF ICT application for UTC TowerCo",phase:"Execution",pre:["UKR1","UKR2"],unlocks:["UKR4","UKR5","UKR6"],owner:"Josh / CA",dur:"2 wks",due:"Q3",status:"Not Started",prog:0,a:true,m:false,upd:false,isNew:false,act:false,note:"DFC Cole Berman meeting confirmed appetite for tower spin-offs + AI data center in Ukraine — strengthens application"},
+  {id:"UKR4",ws:"Ukraine",task:"Brief Congressional appropriators on ICT/URIF",phase:"Execution",pre:["UKR3"],unlocks:[],owner:"Josh",dur:"2 wks",due:"Q3",status:"Not Started",prog:0,a:false,m:false,upd:false,isNew:false,act:false,note:""},
+  {id:"UKR5",ws:"Ukraine",task:"DoD OSC Ukraine reconstruction capital follow-up",phase:"Execution",pre:["UKR3"],unlocks:[],owner:"CA / Josh",dur:"3 wks",due:"Q3",status:"Not Started",prog:0,a:false,m:false,upd:false,isNew:false,act:false,note:""},
+  {id:"UKR6",ws:"Ukraine",task:"KYIV US investor program",phase:"Execution",pre:["UKR3"],unlocks:["UKR7"],owner:"CA / IR",dur:"6 wks",due:"Q3–Q4",status:"In Progress",prog:30,a:false,m:false,upd:false,isNew:false,act:false,note:""},
+  {id:"UKR7",ws:"Ukraine",task:"Washington Roadshow (DFC, WB, Treasury, Congress)",phase:"Conversion",pre:["UKR3","UKR6"],unlocks:[],owner:"Josh / CA",dur:"3 wks",due:"Q4",status:"Not Started",prog:0,a:false,m:false,upd:false,isNew:false,act:false,note:""},
+
+  {id:"PAK1",ws:"Pakistan",task:"Tether/Circle intel memos (internal baseline)",phase:"Foundation",pre:[],unlocks:["PAK2","PAK4","DF1"],owner:"CA / Ridgeline",dur:"Done",due:"Done",status:"Done",prog:100,a:false,m:false,upd:false,isNew:false,act:false,note:"Two intelligence memos completed (KPI 9)"},
+  {id:"PAK2",ws:"Pakistan",task:"Tether CEO / Chairman meeting",phase:"Execution",pre:["PAK1"],unlocks:["PAK3","PAK5","DF2","BD3"],owner:"CA / J.Steitz",dur:"2 wks",due:"Q3",status:"In Progress",prog:25,a:true,m:true,upd:true,isNew:false,act:false,note:"Updated (Jun 19): John actively building connection. USG officials engaged on Tether perception. Bitcoin conference next month flagged as next milestone"},
+  {id:"PAK3",ws:"Pakistan",task:"JazzCash digital assets distribution track",phase:"Execution",pre:["PAK2"],unlocks:["DF3"],owner:"CA / J.Steitz",dur:"Ongoing",due:"Q3",status:"Not Started",prog:0,a:false,m:true,upd:false,isNew:false,act:false,note:""},
+  {id:"PAK4",ws:"Pakistan",task:"Pakistan Caucus engagement & briefing (Rep. Bergman)",phase:"Foundation",pre:["PAK1"],unlocks:["PAK5"],owner:"Continental",dur:"3 wks",due:"Q3",status:"In Progress",prog:35,a:false,m:false,upd:false,isNew:false,act:false,note:""},
+  {id:"PAK5",ws:"Pakistan",task:"SBP / Finance Ministry follow-up",phase:"Execution",pre:["PAK2","PAK4"],unlocks:["PAK6"],owner:"Josh / CA",dur:"2 wks",due:"Q3",status:"Not Started",prog:0,a:false,m:false,upd:false,isNew:false,act:false,note:""},
+  {id:"PAK6",ws:"Pakistan",task:"Digital banking roadmap (JazzCash / Mobilink Bank)",phase:"Conversion",pre:["PAK5"],unlocks:[],owner:"CA",dur:"4 wks",due:"Q3",status:"Not Started",prog:0,a:false,m:false,upd:false,isNew:false,act:false,note:""},
+
+  {id:"CA0",ws:"Central Asia",task:"VEON formal letter to US State Dept / embassy",phase:"Foundation",pre:[],unlocks:["CA1"],owner:"CA / Legal",dur:"1 wk",due:"IMMEDIATE",status:"Not Started",prog:0,a:false,m:false,upd:false,isNew:true,act:true,note:"NEW (Jun 19): Unlocks Rep. Trent Kelly support letter to Sec. Rubio. Kelly's office is waiting. Single action blocking CA1 from Done"},
+  {id:"CA1",ws:"Central Asia",task:"MobiUz Congressional letters (Risch, Kelly, HFAC)",phase:"Foundation",pre:["CA0"],unlocks:["CA2","CA4","CA5"],owner:"Continental / Josh",dur:"2 wks",due:"Jun 2026",status:"In Progress",prog:85,a:false,m:false,upd:true,isNew:false,act:false,note:"Updated (Jun 19): Ridgeline drafted Kelly→Rubio letter. Path confirmed. Blocked on CA0 only"},
+  {id:"CA2",ws:"Central Asia",task:"Uzbekistan State/DFC/NSC engagement",phase:"Foundation",pre:["CA1","A3"],unlocks:["CA3"],owner:"Ridgeline",dur:"2 wks",due:"By July",status:"In Progress",prog:90,a:false,m:false,upd:true,isNew:false,act:false,note:"Updated (TIIF): Josh's State Dept engagement reinforced Kaan's Tashkent visit Jun 16–19. Detailed VEON positioning narrative delivered to State. NSC also engaged"},
+  {id:"CA3",ws:"Central Asia",task:"DFC Uzbekistan Joint Investment Platform",phase:"Execution",pre:["CA2","A1"],unlocks:["CA4","CA6"],owner:"Josh / CA",dur:"4 wks",due:"Q3",status:"In Progress",prog:35,a:false,m:false,upd:true,isNew:false,act:false,note:"Updated (TIIF): Cole Berman / DFC bilateral held in Tashkent — Ridgeline's DFC relationship work created this access. Recurring monthly touchpoint established covering Syria, Venezuela, Jordan, Mexico, Iran, AT&T Mexico"},
+  {id:"CA4",ws:"Central Asia",task:"Engage Sergio Gor for Uzbekistan validation",phase:"Execution",pre:["CA3","CA1"],unlocks:[],owner:"CA",dur:"2 wks",due:"Q3",status:"Not Started",prog:0,a:false,m:false,upd:false,isNew:false,act:false,note:""},
+  {id:"CA5",ws:"Central Asia",task:"Central Asia Co-Del congressional trip planning",phase:"Execution",pre:["CA1"],unlocks:[],owner:"Josh / CA",dur:"6 wks",due:"Q3–Q4",status:"In Progress",prog:25,a:false,m:false,upd:true,isNew:false,act:false,note:"Updated (Jun 19): State expressed interest but member calendars constrained by elections. Timeline likely Q4"},
+  {id:"CA6",ws:"Central Asia",task:"EXIM Bank re-engagement",phase:"Execution",pre:["CA3"],unlocks:[],owner:"CA",dur:"2 wks",due:"Q3",status:"In Progress",prog:30,a:false,m:true,upd:true,isNew:false,act:false,note:"Updated (TIIF): Alyssa Pettus (EXIM CoS) identified via Atlantic Council. Warm contact established. EIB/EBRD financing discussed via Toivo Klaar meeting — parallel multilateral track opened"},
+  {id:"CA7",ws:"Central Asia",task:"Kazakhstan trusted-operator narrative",phase:"Execution",pre:["A3"],unlocks:[],owner:"CA / IR",dur:"Ongoing",due:"Q3–Q4",status:"In Progress",prog:55,a:false,m:false,upd:true,isNew:false,act:false,note:"Updated (TIIF): DFC Cole Berman meeting explicitly included Kazakhstan tower asset spin-offs in scope"},
+  {id:"CA8",ws:"Central Asia",task:"Open RAN / Trusted Vendor Scorecard",phase:"Execution",pre:["CA3"],unlocks:[],owner:"CA",dur:"3 wks",due:"Q3",status:"In Progress",prog:15,a:false,m:false,upd:true,isNew:false,act:false,note:"Updated (TIIF): DFC meeting covered Ericsson 5G Pakistan and trusted-vendor infrastructure across VEON markets — US-backed vendor narrative now active in DFC conversation"},
+  {id:"CA9",ws:"Central Asia",task:"Monthly DFC pipeline call (CA + M&A) — Syria, Venezuela, Jordan, Mexico, Iran, AT&T Mexico",phase:"Execution",pre:["CA3"],unlocks:["NM1","NM4","NM6"],owner:"CA / Ridgeline / M&A",dur:"Monthly",due:"Ongoing",status:"In Progress",prog:20,a:false,m:false,upd:false,isNew:true,act:false,note:"NEW (TIIF): Established per Kaan's directive from Cole Berman bilateral. Ridgeline must be included or receive full readouts — this operationalizes Ridgeline's DFC access"},
+
+  {id:"BD1",ws:"Bangladesh",task:"WB VP South Asia (Zutt) engagement",phase:"Foundation",pre:[],unlocks:["BD2"],owner:"Josh / CA",dur:"2 wks",due:"Q3",status:"Not Started",prog:0,a:false,m:false,upd:false,isNew:false,act:false,note:""},
+  {id:"BD2",ws:"Bangladesh",task:"Digital banking licence follow-up",phase:"Execution",pre:["BD1"],unlocks:["BD4"],owner:"CA",dur:"3 wks",due:"Q3",status:"In Progress",prog:35,a:false,m:false,upd:false,isNew:false,act:false,note:""},
+  {id:"BD3",ws:"Bangladesh",task:"Tether priority-market track",phase:"Execution",pre:["PAK2"],unlocks:["BD4"],owner:"J.Steitz",dur:"Ongoing",due:"Q3",status:"Not Started",prog:0,a:false,m:false,upd:false,isNew:false,act:false,note:""},
+  {id:"BD4",ws:"Bangladesh",task:"Amplify taxation report",phase:"Conversion",pre:["BD2","BD3"],unlocks:[],owner:"Josh / CA",dur:"4 wks",due:"Q4",status:"Not Started",prog:0,a:false,m:false,upd:false,isNew:false,act:false,note:""},
+  {id:"BD5",ws:"Bangladesh",task:"Banglalink satellite partnership narrative (SES / Starlink alternative)",phase:"Execution",pre:[],unlocks:[],owner:"CA / IR",dur:"3 wks",due:"Q3",status:"In Progress",prog:20,a:false,m:false,upd:true,isNew:false,act:false,note:"Updated (TIIF): SES meeting in Tashkent scoped expansion into Bangladesh + Pakistan as Starlink alternative — Ridgeline should use this as USG narrative hook"},
+
+  {id:"NM1",ws:"New Markets",task:"Syria legal/OFAC eligibility memo + tender assessment",phase:"Foundation",pre:["A1","A2"],unlocks:["NM2","NM3"],owner:"CA / Legal",dur:"2 wks",due:"URGENT",status:"In Progress",prog:35,a:false,m:false,upd:true,isNew:false,act:false,note:"Updated (Jun 19): Josh + Augie coordinating. Plan to get Augie to Syria ASAP for tender/bid. Monthly DFC call now covers Syria pipeline"},
+  {id:"NM2",ws:"New Markets",task:"Syria State/NSC brief",phase:"Execution",pre:["NM1"],unlocks:["NM3"],owner:"CA / Legal",dur:"1 wk",due:"URGENT",status:"Not Started",prog:0,a:false,m:false,upd:false,isNew:false,act:false,note:""},
+  {id:"NM3",ws:"New Markets",task:"Syria tender bid & go/no-go to Chairman",phase:"Conversion",pre:["NM1","NM2","A5"],unlocks:[],owner:"CA",dur:"1 wk",due:"Q3",status:"Not Started",prog:0,a:false,m:false,upd:false,isNew:false,act:false,note:""},
+  {id:"NM4",ws:"New Markets",task:"Venezuela OFAC special licence follow-up",phase:"Foundation",pre:[],unlocks:["NM5"],owner:"CA / Josh",dur:"Ongoing",due:"Q3",status:"In Progress",prog:60,a:false,m:false,upd:true,isNew:false,act:false,note:"Updated (TIIF): DFC Cole Berman confirmed DFC appetite for Venezuela at CEO-level bilateral — Ridgeline's sustained OFAC positioning drove this onto the DFC agenda"},
+  {id:"NM5",ws:"New Markets",task:"Venezuela GL 56 contingent contract",phase:"Conversion",pre:["NM4","A5"],unlocks:[],owner:"CA / Josh",dur:"3 wks",due:"Q3",status:"Not Started",prog:0,a:false,m:false,upd:false,isNew:false,act:false,note:""},
+  {id:"NM6",ws:"New Markets",task:"Mexico/AT&T/DFC engagement",phase:"Foundation",pre:[],unlocks:["NM7"],owner:"Josh / Ridgeline",dur:"Ongoing",due:"Q3",status:"Done",prog:100,a:false,m:false,upd:true,isNew:false,act:false,note:"Updated (TIIF): AT&T Mexico acquisition/equity-swap discussed directly with DFC Cole Berman — Ridgeline's Ambassador groundwork and John's AT&T connection put this on the DFC agenda"},
+  {id:"NM7",ws:"New Markets",task:"Leverage Josh's US Ambassador to Mexico relationship",phase:"Execution",pre:["NM6"],unlocks:[],owner:"Josh",dur:"Ongoing",due:"Q3",status:"In Progress",prog:45,a:false,m:false,upd:true,isNew:false,act:false,note:"Updated (TIIF): AT&T Mexico now also on monthly DFC call. Two parallel tracks active — Ambassador channel and DFC channel"},
+
+  {id:"DF1",ws:"Digital Finance",task:"Digital assets UAE + US campaign strategy",phase:"Foundation",pre:["PAK1"],unlocks:["DF2","DF3"],owner:"CA / Marine",dur:"3 wks",due:"Q3",status:"In Progress",prog:20,a:true,m:true,upd:true,isNew:false,act:false,note:"Updated (Jun 19): Ahmet directed narrow scope to short-term/high-impact. Augie looped in. Marine: confirm narrowed scope aligns with full UAE + US campaign vision"},
+  {id:"DF2",ws:"Digital Finance",task:"Circle engagement",phase:"Execution",pre:["PAK2","DF1"],unlocks:["DF3"],owner:"J.Steitz / CA",dur:"3 wks",due:"Q3",status:"In Progress",prog:25,a:false,m:false,upd:false,isNew:false,act:false,note:""},
+  {id:"DF3",ws:"Digital Finance",task:"One concrete commercial digital-finance project by Q4",phase:"Conversion",pre:["PAK3","DF2"],unlocks:[],owner:"CA",dur:"Ongoing",due:"Q4",status:"Not Started",prog:0,a:true,m:true,upd:false,isNew:false,act:false,note:"Marine: deals not meetings"},
+  {id:"DF4",ws:"Digital Finance",task:"Money20/20 + Bitcoin conference participation",phase:"Execution",pre:["PAK2"],unlocks:[],owner:"J.Steitz",dur:"4 wks",due:"Q4",status:"In Progress",prog:15,a:false,m:false,upd:true,isNew:false,act:false,note:"Updated (Jun 19): Bitcoin conference next month flagged by John as digital asset advancement opportunity"},
+
+  {id:"ET1",ws:"Emerging Tech",task:"Map VEON assets to White House AI initiative",phase:"Foundation",pre:[],unlocks:["ET2","ET4"],owner:"CA / Ridgeline",dur:"3 wks",due:"Q3",status:"In Progress",prog:30,a:true,m:false,upd:false,isNew:false,act:false,note:""},
+  {id:"ET2",ws:"Emerging Tech",task:"Satellite & in-orbit data center opportunity assessment",phase:"Foundation",pre:["ET1"],unlocks:["ET3"],owner:"CA",dur:"4 wks",due:"Q3",status:"In Progress",prog:30,a:true,m:false,upd:true,isNew:false,act:false,note:"Updated (TIIF): SES bilateral held in Tashkent — Uzbekistan satellite contract being finalized (€2.5m, EIB €8m equipment, up to €60m EU grants). Expansion scoped into Kazakhstan, Ukraine, Bangladesh, Pakistan"},
+  {id:"ET3",ws:"Emerging Tech",task:"Data center strategy scoping",phase:"Foundation",pre:["ET2"],unlocks:["ET4"],owner:"CA",dur:"4 wks",due:"Q3",status:"In Progress",prog:25,a:true,m:false,upd:true,isNew:false,act:false,note:"Updated (TIIF): Beeline × DataVolt MOU signed. DFC discussed 15–20 MW AI Data Center in Ukraine. Two live data center conversations now active"},
+  {id:"ET4",ws:"Emerging Tech",task:"China-alternative tech operator positioning (USG narrative)",phase:"Execution",pre:["ET1","ET3"],unlocks:[],owner:"CA / Ridgeline",dur:"Ongoing",due:"Q3–Q4",status:"Not Started",prog:0,a:true,m:false,upd:false,isNew:false,act:false,note:"ET2 and ET3 now active — satellite, data center, and AI deals live simultaneously. Narrative is ready to build"},
+
+  {id:"NYC1",ws:"NYC Office",task:"Confirm NYC office opening date",phase:"Foundation",pre:[],unlocks:["NYC2","NYC3"],owner:"CA / Marine",dur:"1 wk",due:"ASAP",status:"In Progress",prog:65,a:false,m:true,upd:true,isNew:false,act:false,note:"Updated (Jun 19): Josh actively conducting USG stakeholder outreach for grand opening"},
+  {id:"NYC2",ws:"NYC Office",task:"Stakeholder list & invitations",phase:"Execution",pre:["NYC1"],unlocks:["NYC3"],owner:"CA",dur:"2 wks",due:"Q3",status:"Not Started",prog:0,a:false,m:false,upd:false,isNew:false,act:false,note:""},
+  {id:"NYC3",ws:"NYC Office",task:"Invite Dan Katz to NYC opening",phase:"Execution",pre:["NYC1","A2"],unlocks:[],owner:"Josh / CA",dur:"1 wk",due:"Q3",status:"Not Started",prog:0,a:false,m:true,upd:false,isNew:false,act:false,note:"Requires Dan Katz meeting (A2) first"},
+];
+
+let statuses={};
+let progress={};
+let customTasks=[];
+T.forEach(t=>{statuses[t.id]=t.status;progress[t.id]=t.prog;});
+let lastUpdated=null;
+
+function allTasks(){return T.concat(customTasks);}
+
+async function loadState(){
+  try{
+    const res=await window.storage.get(STORAGE_KEY,true);
+    if(res && res.value){
+      const parsed=JSON.parse(res.value);
+      statuses=Object.assign(statuses,parsed.statuses||{});
+      progress=Object.assign(progress,parsed.progress||{});
+      customTasks=parsed.customTasks||[];
+      customTasks.forEach(t=>{
+        if(!(t.id in statuses)) statuses[t.id]=t.status;
+        if(!(t.id in progress)) progress[t.id]=t.prog;
+        const num=parseInt((t.id||"").replace(/^C/,""),10);
+        if(!isNaN(num) && num>=manualIdCounter) manualIdCounter=num+1;
+      });
+      lastUpdated=parsed.lastUpdated||null;
+    } else {
+      await persist();
+    }
+  }catch(e){}
+  render();
+}
+
+let saveTimer=null;
+function persist(){
+  lastUpdated=new Date().toISOString();
+  return new Promise(resolve=>{
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(async ()=>{
+      try{
+        await window.storage.set(STORAGE_KEY, JSON.stringify({statuses,progress,customTasks,lastUpdated}), true);
+      }catch(e){}
+      updateLastEdit();
+      resolve();
+    },400);
+  });
+}
+
+function updateLastEdit(){
+  const el=document.getElementById("lastEdit");
+  if(lastUpdated){
+    const d=new Date(lastUpdated);
+    el.textContent="Last edit "+d.toLocaleDateString(undefined,{month:"short",day:"numeric"})+" at "+d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"});
+  }
+}
+
+function fmtDue(d){
+  if(!d) return "—";
+  const up=d.toUpperCase();
+  if(up==="IMMEDIATE"||up==="ASAP"||up==="URGENT") return `<span class="due-urgent">URGENT</span>`;
+  return `<span style="font-size:11px;font-weight:500">${d}</span>`;
+}
+function pill(txt,colors){const[bg,col]=colors||["#eee","#333"];return `<span class="pill" style="background:${bg};color:${col}">${txt}</span>`;}
+function stSel(id){
+  const s=statuses[id];
+  const[bg,col]=ST_C[s]||["#eee","#333"];
+  const role=document.getElementById("roleSel").value;
+  const disabled=role==="client"?"disabled":"";
+  return `<select class="stat-sel" ${disabled} style="background:${bg};color:${col}" onchange="upd('${id}',this.value)">${["Not Started","In Progress","Blocked","Done","Urgent"].map(x=>`<option${x===s?" selected":""}>${x}</option>`).join("")}</select>`;
+}
+async function upd(id,val){
+  statuses[id]=val;
+  if(val==="Done") progress[id]=100;
+  renderMets();
+  await persist();
+  render();
+}
+function pbColor(s){return s==="Done"?"#3B6D11":s==="Blocked"?"#A32D2D":s==="Urgent"?"#993C1D":"#378ADD";}
+function depItems(ids,type){
+  if(!ids||!ids.length)return `<span class="dep-none">${type==="pre"?"None":"Nothing"}</span>`;
+  return ids.map(id=>{const t=allTasks().find(x=>x.id===id);if(!t)return `<div class="dep-item"><span style="color:var(--color-text-secondary);font-size:10px">${type==="pre"?"←":"→"}</span><span class="dep-label" style="background:#F1EFE8;color:#5F5E5A">[${id}]</span></div>`;const s=statuses[id];const[bg,col]=ST_C[s]||["#eee","#333"];return `<div class="dep-item"><span style="color:var(--color-text-secondary);font-size:10px">${type==="pre"?"←":"→"}</span><span class="dep-label" style="background:${bg};color:${col}">[${id}]</span></div>`;}).join("");
+}
+function renderMets(){
+  const at=allTasks();
+  const tot=at.length,dn=Object.values(statuses).filter(s=>s==="Done").length,ip=Object.values(statuses).filter(s=>s==="In Progress").length,bl=Object.values(statuses).filter(s=>s==="Blocked").length,ns=Object.values(statuses).filter(s=>s==="Not Started").length,upd=at.filter(t=>t.upd||t.isNew).length;
+  document.getElementById("mets").innerHTML=`
+    <div class="mc"><div class="ml">Total tasks</div><div class="mv">${tot}</div></div>
+    <div class="mc"><div class="ml">Done</div><div class="mv" style="color:#3B6D11">${dn}</div><div class="ms">${Math.round(dn/tot*100)}%</div></div>
+    <div class="mc"><div class="ml">In progress</div><div class="mv" style="color:#185FA5">${ip}</div></div>
+    <div class="mc"><div class="ml">Not started</div><div class="mv" style="color:#5F5E5A">${ns}</div></div>
+    <div class="mc"><div class="ml">Blocked</div><div class="mv" style="color:#A32D2D">${bl}</div></div>
+    <div class="mc"><div class="ml">Updated this week</div><div class="mv" style="color:#27500A">${upd}</div></div>`;
+}
+function render(){
+  const srch=(document.getElementById("srch").value||"").toLowerCase();
+  const wsFlt=document.getElementById("wsFlt").value;
+  const stFlt=document.getElementById("stFlt").value;
+  const chgFlt=document.getElementById("chgFlt").value;
+  const role=document.getElementById("roleSel").value;
+  document.getElementById("addRow").style.display=role==="client"?"none":"flex";
+  if(role==="client") document.getElementById("addForm").classList.remove("open");
+  let rows=allTasks().filter(t=>{
+    if(wsFlt&&t.ws!==wsFlt)return false;
+    if(stFlt&&statuses[t.id]!==stFlt)return false;
+    if(chgFlt==="updated"&&!t.upd&&!t.isNew)return false;
+    if(chgFlt==="new"&&!t.isNew)return false;
+    if(chgFlt==="action"&&!t.act)return false;
+    if(srch&&!t.task.toLowerCase().includes(srch)&&!t.ws.toLowerCase().includes(srch)&&!t.id.toLowerCase().includes(srch))return false;
+    return true;
+  });
+  const byWs={};
+  rows.forEach(t=>{if(!byWs[t.ws])byWs[t.ws]=[];byWs[t.ws].push(t);});
+  let html="";
+  Object.entries(byWs).forEach(([ws,ts],idx)=>{
+    const[wbg,wcol]=WS_C[ws]||["#eee","#333"];
+    const emoji=WS_EMOJI[ws]||"📋";
+    const doneCount=ts.filter(t=>statuses[t.id]==="Done").length;
+    if(idx>0) html+=`<tr class="grp-spacer"><td colspan="9" style="height:10px;background:var(--color-background-secondary);border:none;padding:0"></td></tr>`;
+    html+=`<tr class="grp-hd"><td colspan="9">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:17px;line-height:1;flex-shrink:0">${emoji}</span>
+        <span style="font-size:11.5px;font-weight:700;color:var(--color-text-primary);letter-spacing:0">${ws}</span>
+        <span style="font-size:10px;font-weight:500;color:${wcol};background:${wbg};padding:2px 8px;border-radius:20px;margin-left:2px">${doneCount}/${ts.length} done</span>
+      </div>
+    </td></tr>`;
+    ts.forEach(t=>{
+      const s=statuses[t.id];
+      const rc=t.a&&t.m?"flag-am":t.a?"flag-a":t.m?"flag-m":"";
+      const rowCls=`${rc}${t.isNew?" row-new":t.upd?" row-upd":""}`;
+      const[phbg,phcol]=PH_C[t.phase]||["#eee","#333"];
+      const prog=s==="Done"?100:progress[t.id];
+      const badges=(t.upd?`<span class="chg-badge">updated</span>`:"")+( t.isNew?`<span class="new-badge">new</span>`:"")+( t.act?`<span class="act-badge">action needed</span>`:"");
+      html+=`<tr class="${rowCls}">
+        <td><span style="font-size:9px;font-weight:500;color:var(--color-text-secondary)">${t.id}</span>${t.a?'<span class="pill" style="background:#FCEBEB;color:#791F1F;font-size:9px;margin-left:3px">A</span>':''}${t.m?'<span class="pill" style="background:#E1F5EE;color:#085041;font-size:9px;margin-left:3px">M</span>':''}</td>
+        <td><span style="font-size:13px;font-weight:600;color:var(--color-text-primary);line-height:1.4">${t.task}</span>${badges}${t.note?`<div class="note">${t.note}</div>`:""}</td>
+        <td>${pill(t.phase,[phbg,phcol])}</td>
+        <td><div class="dep-chain">${depItems(t.pre,"pre")}</div></td>
+        <td><div class="dep-chain">${depItems(t.unlocks,"unl")}</div></td>
+        <td style="font-size:11px;color:var(--color-text-secondary)">${t.owner}</td>
+        <td style="font-size:11px">${t.dur}</td>
+        <td>${fmtDue(t.due)}</td>
+        <td><div>${stSel(t.id)}</div><div class="pb-wrap"><div class="pb" style="width:${prog}%;background:${pbColor(s)}"></div></div><div style="font-size:9px;color:var(--color-text-secondary);text-align:right;margin-top:1px">${prog}%</div></td>
+      </tr>`;
+    });
+  });
+  document.getElementById("tbody").innerHTML=html;
+  renderMets();
+}
+function sw(name,btn){
+  document.querySelectorAll(".tab-wrap .tab").forEach(b=>b.classList.remove("on"));
+  btn.classList.add("on");
+  ["tracker","thisweek","actions","risks"].forEach(p=>{document.getElementById("pn-"+p).style.display=p===name?"block":"none";});
+}
+
+const twItems=[
+  {src:"TIIF Flash Report",ws:"Central Asia",type:"upd",title:"CA2 → 90% — State Dept engagement reinforced Kaan's Tashkent visit",body:"Josh's positioning narrative delivered to State contemporaneously with the forum. NSC also engaged on both Uzbekistan and Kazakhstan. Strongest single-week State/NSC delivery on Central Asia to date."},
+  {src:"TIIF Flash Report",ws:"Central Asia",type:"upd",title:"CA3 → In Progress 35% — DFC Cole Berman bilateral + monthly touchpoint established",body:"Ridgeline's sustained DFC relationship work created the access for this meeting. DFC confirmed readiness to support Perfectum, fixed fiber, tower spin-offs. Recurring monthly call established covering Syria, Venezuela, Jordan, Mexico, Iran, AT&T Mexico — CA/M&A joining."},
+  {src:"TIIF Flash Report",ws:"Central Asia",type:"new",title:"CA9 — Monthly DFC pipeline call (new standing task)",body:"New recurring task. Established per Kaan's directive from Cole Berman bilateral. Ridgeline must be included in this call or receive full readouts — this is Ridgeline's DFC relationship being operationalized."},
+  {src:"TIIF Flash Report",ws:"Central Asia",type:"upd",title:"CA6 → 30% — EXIM Bank warm contact + EIB/EBRD track opened",body:"Alyssa Pettus (EXIM CoS) identified via Atlantic Council. Toivo Klaar (EU Special Representative) meeting opened EIB/EBRD financing pathways for Ukraine, Uzbekistan, Kazakhstan — parallel multilateral capital track."},
+  {src:"TIIF Flash Report",ws:"Central Asia",type:"upd",title:"CA7 → 55% — Kazakhstan included in DFC Cole Berman scope",body:"Tower asset spin-offs in Kazakhstan explicitly on the DFC agenda from Tashkent meeting."},
+  {src:"TIIF Flash Report",ws:"Central Asia",type:"upd",title:"CA8 → In Progress 15% — DFC trusted-vendor narrative active",body:"Ericsson 5G Pakistan and trusted-vendor infrastructure across VEON markets now in DFC conversation. US-backed vendor narrative live."},
+  {src:"TIIF Flash Report",ws:"New Markets",type:"upd",title:"NM4 → 60% — DFC confirmed Venezuela appetite at CEO level",body:"Ridgeline's sustained OFAC positioning drove Venezuela onto the DFC CEO-level bilateral agenda. DFC confirmed shared interest subject to evolving US regulations."},
+  {src:"TIIF Flash Report",ws:"New Markets",type:"upd",title:"NM6 Done (reinforced) + NM7 → 45% — AT&T Mexico now on DFC agenda",body:"AT&T Mexico acquisition/equity-swap discussed directly with DFC Cole Berman. Ridgeline's Ambassador groundwork and John's AT&T connection put this on the agenda. Two parallel tracks now active: Ambassador channel and DFC channel."},
+  {src:"TIIF Flash Report",ws:"Emerging Tech",type:"upd",title:"ET2 → 30% — SES satellite partnership scoped across 5 markets",body:"Tashkent SES bilateral: Uzbekistan contract being finalized (€2.5m, EIB €8m equipment, up to €60m EU grants). Expansion into Kazakhstan, Ukraine, Bangladesh, Pakistan as Starlink alternative. Direct delivery on Augie's satellite priority."},
+  {src:"TIIF Flash Report",ws:"Emerging Tech",type:"upd",title:"ET3 → 25% — DataVolt MOU signed + DFC AI data center discussion",body:"Beeline × DataVolt MOU for IT Park Uzbekistan. DFC discussed 15–20 MW AI Data Center in Ukraine. Two live data center conversations simultaneously active."},
+  {src:"TIIF Flash Report",ws:"Bangladesh",type:"upd",title:"BD5 → 20% — SES/Starlink alternative narrative active for Bangladesh + Pakistan",body:"SES partnership explicitly scoped into Bangladesh and Pakistan. Ridgeline should use this as a USG narrative hook for both markets."},
+  {src:"Jun 19 Memo",ws:"Central Asia",type:"new",title:"CA0 — VEON formal letter to State/embassy (new task, action required)",body:"Rep. Trent Kelly's office confirmed: VEON sends letter to State or embassy → Kelly sends support letter to Sec. Rubio. Single action blocking CA1 from Done. Owner: CA/Legal. Due: immediately."},
+  {src:"Jun 19 Memo",ws:"Access & Protection",type:"new",title:"ADV1 — Atlantic Council deconfliction with Haik (action required)",body:"Josh joined Trade Not Aid event. EXIM Bank CoS participant. Must deconflict with Haik before confirming July participation."},
+];
+
+document.getElementById("pn-thisweek").innerHTML=`<div style="padding:0.5rem 0 0.75rem"><p style="font-size:12px;color:var(--color-text-secondary)">All changes applied from the Ridgeline Jun 19 memo and TIIF Flash Report (Ridgeline-attributable activity only).</p></div>`+
+twItems.map(i=>`<div class="risk-card">
+  <span class="risk-lv" style="background:${i.type==="new"?"#FAEEDA":"#EAF3DE"};color:${i.type==="new"?"#633806":"#27500A"}">[${i.ws}] ${i.type==="new"?"New":"Updated"}</span>
+  <div>
+    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:2px">Source: ${i.src}</div>
+    <div style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:3px">${i.title}</div>
+    <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.5">${i.body}</div>
+  </div>
+</div>`).join("");
+
+const actions=[
+  {urgency:"Immediate",bg:"#FCEBEB",col:"#791F1F",id:"CA0",title:"Send VEON formal letter to US State Dept or embassy",body:"Unlocks Rep. Trent Kelly's support letter to Sec. Rubio. Kelly's office is waiting. One letter moves CA1 from 85% to Done and activates the full Congressional Uzbekistan chain.",owner:"CA / Legal"},
+  {urgency:"Immediate",bg:"#FCEBEB",col:"#791F1F",id:"ADV1",title:"Deconflict Atlantic Council Trade Not Aid effort with Haik",body:"Josh joined the July event. EXIM Bank CoS is a participant. Must check with Haik on his parallel Atlantic Council effort before confirming VEON's role.",owner:"Josh / CA / Haik"},
+  {urgency:"Immediate",bg:"#FCEBEB",col:"#791F1F",id:"CA9",title:"Confirm Ridgeline is included in monthly DFC pipeline call",body:"The monthly CA/M&A/DFC call now covers Syria, Venezuela, Jordan, Mexico, Iran, AT&T Mexico. This is Ridgeline's DFC relationship being operationalized. Ridgeline must be on this call or receive full readouts.",owner:"CA / Ridgeline"},
+  {urgency:"This week",bg:"#FAEEDA",col:"#633806",id:"A2",title:"Schedule Dan Katz introductory meeting",body:"Marine flagged as overdue. Dan Katz is actively looking at Syria. Unblocks NM1, NM2, NYC3. Josh suggested coffee, dinner, or NYC opening invite.",owner:"Josh / CA"},
+  {urgency:"This week",bg:"#FAEEDA",col:"#633806",id:"DF1",title:"Marine to confirm digital assets campaign scope",body:"Ahmet directed narrow/short-term scope. Marine wants full UAE + US campaign. These may be misaligned — needs confirmation before John's work continues in the wrong direction.",owner:"Marine / CA"},
+  {urgency:"Q3",bg:"#EAF3DE",col:"#27500A",id:"UKR2",title:"Schedule Deputy Sec. Chris Landau & Ben Black meeting",body:"URIF application cannot be filed until this meeting happens. Single identified bottleneck for the entire Ukraine capital workstream.",owner:"Augie / CA"},
+];
+document.getElementById("pn-actions").innerHTML=`<div style="padding:0.5rem 0 0.75rem"><p style="font-size:12px;color:var(--color-text-secondary)">Sorted by urgency. Each action unblocks specific downstream tasks.</p></div>`+
+actions.map(a=>`<div class="risk-card">
+  <span class="risk-lv" style="background:${a.bg};color:${a.col}">${a.urgency}</span>
+  <div>
+    <div style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:2px">[${a.id}] ${a.title}</div>
+    <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.5;margin-bottom:4px">${a.body}</div>
+    <div style="font-size:10px;color:var(--color-text-secondary)">Owner: <strong>${a.owner}</strong></div>
+  </div>
+</div>`).join("");
+
+const risks=[
+  {lvl:"Critical",bg:"#FCEBEB",col:"#A32D2D",t:"Ridgeline must be on the monthly DFC call or it loses visibility on its own pipeline",b:"The Cole Berman bilateral established a recurring call covering Syria, Venezuela, Jordan, Mexico, Iran, and AT&T Mexico — all Ridgeline-originated workstreams. If CA9 proceeds without Ridgeline, the relationship gets institutionalized around the team without the relationship holder."},
+  {lvl:"Critical",bg:"#FCEBEB",col:"#A32D2D",t:"Syria tender — Augie travel being planned but Dan Katz (A2) still not scheduled",b:"Dan Katz is already in the Syria orbit. Getting Augie to Syria for the tender while Dan Katz hasn't been engaged is a sequencing risk. A2 should happen first or in parallel."},
+  {lvl:"Critical",bg:"#FCEBEB",col:"#A32D2D",t:"CA0 — VEON letter to State is blocking an easy Congressional win",b:"Trent Kelly's office is waiting. One letter moves CA1 to Done and activates the full Uzbekistan Congressional chain. Every day without it is a free win left on the table."},
+  {lvl:"High",bg:"#FAECE7",col:"#993C1D",t:"Digital assets scope misalignment (Ahmet narrow vs. Marine campaign)",b:"John is building a narrowed short-term deck per Ahmet's direction. Marine wants a full UAE + US campaign. Needs resolution before John continues."},
+  {lvl:"High",bg:"#FAECE7",col:"#993C1D",t:"Atlantic Council deconfliction with Haik unresolved",b:"Two uncoordinated VEON tracks at the same institution. Must resolve before Josh confirms VEON's July participation."},
+  {lvl:"Medium",bg:"#FAEEDA",col:"#854F0B",t:"UKR2 (Deputy Sec. Landau & Ben Black) still unscheduled",b:"URIF application is blocked. Augie flagged as major priority with insufficient progress. This meeting is the specific bottleneck."},
+  {lvl:"Medium",bg:"#FAEEDA",col:"#854F0B",t:"Co-Del trip slipping to Q4",b:"Member election calendars constraining timeline. Central Asia Congressional validation track delayed by at least one quarter."},
+];
+document.getElementById("pn-risks").innerHTML=`<div style="padding:0.5rem 0 0.75rem"><p style="font-size:12px;color:var(--color-text-secondary)">Updated Jun 23, 2026.</p></div>`+
+risks.map(r=>`<div class="risk-card"><span class="risk-lv" style="background:${r.bg};color:${r.col}">${r.lvl}</span><div><div style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:3px">${r.t}</div><div style="font-size:12px;color:var(--color-text-secondary);line-height:1.5">${r.b}</div></div></div>`).join("");
+
+function toggleAddForm(){
+  document.getElementById("addForm").classList.toggle("open");
+}
+
+let manualIdCounter=1;
+async function addTask(){
+  const ws=document.getElementById("af-ws").value;
+  const task=document.getElementById("af-task").value.trim();
+  if(!task){ alert("Enter a task description before adding."); return; }
+  const phase=document.getElementById("af-phase").value;
+  const owner=document.getElementById("af-owner").value.trim()||"Unassigned";
+  const due=document.getElementById("af-due").value.trim()||"TBD";
+  const dur=document.getElementById("af-dur").value.trim()||"TBD";
+  const status=document.getElementById("af-status").value;
+  const preRaw=document.getElementById("af-pre").value.trim();
+  const pre=preRaw?preRaw.split(",").map(s=>s.trim().toUpperCase()).filter(Boolean):[];
+  const note=document.getElementById("af-note").value.trim();
+  const a=document.getElementById("af-a").checked;
+  const m=document.getElementById("af-m").checked;
+  const act=document.getElementById("af-act").checked;
+
+  const existingIds=new Set(allTasks().map(t=>t.id));
+  let newId;
+  do{ newId="C"+manualIdCounter; manualIdCounter++; } while(existingIds.has(newId));
+
+  const newTask={id:newId,ws,task,phase,pre,unlocks:[],owner,dur,due,status,prog:status==="Done"?100:0,a,m,upd:false,isNew:true,act,note};
+  customTasks.push(newTask);
+  statuses[newId]=status;
+  progress[newId]=newTask.prog;
+
+  document.getElementById("af-task").value="";
+  document.getElementById("af-owner").value="";
+  document.getElementById("af-due").value="";
+  document.getElementById("af-dur").value="";
+  document.getElementById("af-pre").value="";
+  document.getElementById("af-note").value="";
+  document.getElementById("af-a").checked=false;
+  document.getElementById("af-m").checked=false;
+  document.getElementById("af-act").checked=false;
+  document.getElementById("addForm").classList.remove("open");
+
+  await persist();
+  render();
+}
+
+loadState();
+setInterval(loadState, 8000);
+</script>
+</body>
+</html>
